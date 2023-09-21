@@ -73,6 +73,7 @@
 #'   Currently, each vector must have the same length (i.e. each study must use
 #'   the same number of knots). If unspecified (the default), the knots will be
 #'   chosen based on `n_knots` as described above.
+#' #' @param runmodel Set to FALSE if want to return the components to run the model rather than the model itself
 #'
 #' @details When specifying a model formula in the `regression` argument, the
 #'   usual formula syntax is available (as interpreted by [model.matrix()]). The
@@ -239,7 +240,8 @@ nma <- function(network,
                 int_check = TRUE,
                 mspline_degree = 3,
                 n_knots = 3,
-                knots = NULL) {
+                knots = NULL,
+                runmodel = FALSE) {
 
   # Check network
   if (!inherits(network, "nma_data")) {
@@ -908,7 +910,11 @@ nma <- function(network,
     adapt_delta = adapt_delta,
     int_thin = int_thin,
     int_check = int_check,
-    basis = basis)
+    basis = basis,
+    runmodel = runmodel)
+
+## return data object as is if runmodel is set to false
+if (runmodel == FALSE) return(stanfit)
 
   # Make readable parameter names for generated quantities
   fnames_oi <- stanfit@sim$fnames_oi
@@ -1114,7 +1120,8 @@ nma.fit <- function(ipd_x, ipd_y,
                     adapt_delta = NULL,
                     int_thin = 0,
                     int_check = TRUE,
-                    basis) {
+                    basis,
+                    runmodel) {
 
   if (missing(ipd_x)) ipd_x <- NULL
   if (missing(ipd_y)) ipd_y <- NULL
@@ -1821,7 +1828,8 @@ nma.fit <- function(ipd_x, ipd_y,
   } else {
     abort(glue::glue('"{likelihood}" likelihood not supported.'))
   }
-
+# Return data and other model components without sampling if runmodel is set to FALSE  
+if (runmodel == FALSE) return(stanargs)
   # Call sampling, managing warnings for integration checks if required
   if (n_int > 1 && int_check) {
     rhat_warn_a <- FALSE
